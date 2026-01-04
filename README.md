@@ -237,9 +237,10 @@ meta_agent-MCP/
 
 ## 🗺️ Roadmap
 
-### 🔬 Phase 1: Deep Refelction Agent (Planned)
-Implementation of a Google-style Deep Reflection Agent using OODA Loop methodology:
-<img width="1484" height="758" alt="refelction-agent" src="https://github.com/user-attachments/assets/88317168-5be0-4c38-8742-dd99369451f9" />
+### 🔬 Phase 1: Deep Reflection Agent (Planned)
+Implementation of a Deep Reflection Agent using OODA Loop methodology:
+
+<img width="1484" height="758" alt="reflection-agent" src="https://github.com/user-attachments/assets/88317168-5be0-4c38-8742-dd99369451f9" />
 
 - **Observe**: Capture agent interactions, performance metrics, system state
 - **Orient**: Pattern recognition, trend analysis, emergent behavior detection

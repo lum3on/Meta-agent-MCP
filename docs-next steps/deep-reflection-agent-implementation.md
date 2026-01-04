@@ -1,8 +1,8 @@
-# Deep Research Agent Implementation Guide
+# Deep Reflection Agent Implementation Guide
 
 ## Executive Summary
 
-This document provides a comprehensive implementation plan for a **Google-style Deep Research Agent** that operates as a holistic reflection layer for the meta-agent MCP system. The agent uses OODA Loop methodology (Observe-Orient-Decide-Act) to continuously monitor, analyze, and optimize the entire agentic stack.
+This document provides a comprehensive implementation plan for a **Deep Reflection Agent** that operates as a holistic reflection layer for the meta-agent MCP system. The agent uses OODA Loop methodology (Observe-Orient-Decide-Act) to continuously monitor, analyze, and optimize the entire agentic stack.
 
 ---
 
@@ -12,7 +12,7 @@ This document provides a comprehensive implementation plan for a **Google-style 
 2. [OODA Loop Framework](#2-ooda-loop-framework)
 3. [Reflexion: Learning Across Trials](#3-reflexion-learning-across-trials)
 4. [Anthropic's Multi-Agent Lessons](#4-anthropics-multi-agent-research-system-lessons)
-5. [Deep Research Survey Findings](#5-deep-research-survey-findings)
+5. [Deep Reflection Survey Findings](#5-deep-reflection-survey-findings)
 6. [Reflective AI Principles](#6-reflective-ai-principles)
 7. [Recommended Architecture](#7-recommended-architecture)
 8. [Memory Architecture](#8-memory-architecture)
@@ -28,7 +28,7 @@ This document provides a comprehensive implementation plan for a **Google-style 
 
 ### Overview
 
-Based on extensive research including Google's Deep Research documentation, Anthropic's multi-agent research system, OODA Loop methodology, and modern reflective AI patterns, we've identified the following key components for implementing a Deep Research Agent:
+Based on extensive research including reflective AI documentation, Anthropic's multi-agent research system, OODA Loop methodology, and modern reflective AI patterns, we've identified the following key components for implementing a Deep Reflection Agent:
 
 - **OODA Loop** for continuous system monitoring and adaptation
 - **Reflexion Framework** for learning across multiple attempts
@@ -138,9 +138,9 @@ Key engineering insights from Anthropic's production multi-agent research system
 
 ---
 
-## 5. Deep Research Survey Findings
+## 5. Deep Reflection Survey Findings
 
-From the comprehensive academic survey on Deep Research systems:
+From the comprehensive academic survey on Deep Reflection and reflective AI systems:
 
 ### Three Core Dimensions
 
@@ -163,9 +163,9 @@ From the comprehensive academic survey on Deep Research systems:
 
 | Period | Milestone |
 |--------|-----------|
-| Dec 2024 | Google Gemini pioneered Deep Research |
-| Feb 2025 | OpenAI's o3-based Deep Research launched |
-| Feb 2025 | Perplexity launched free Deep Research |
+| Dec 2024 | Google Gemini pioneered Deep Research capabilities |
+| Feb 2025 | OpenAI's o3-based reasoning launched |
+| Feb 2025 | Perplexity launched advanced research features |
 | Mar 2025+ | Ecosystem expansion, multi-modal integration |
 | Apr 2025 | Anthropic launched Claude/Research |
 
@@ -228,7 +228,7 @@ Based on strategy analysis (confidence score: 0.85), this approach provides the 
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                         Deep Research Agent                              │
+│                         Deep Reflection Agent                            │
 ├─────────────────────────────────────────────────────────────────────────┤
 │  ┌───────────────────────────────────────────────────────────────────┐  │
 │  │                    OODA Loop Controller                            │  │
@@ -427,11 +427,11 @@ collections = {
 
 ```
 src/meta_agent_mcp/
-├── deep_research/
+├── deep_reflection/
 │   ├── __init__.py                  # Package initialization
 │   ├── models.py                    # Pydantic models for all data types
 │   ├── ooda_controller.py           # OODA Loop orchestration
-│   ├── config.py                    # Deep research settings
+│   ├── config.py                    # Deep reflection settings
 │   │
 │   ├── observers/
 │   │   ├── __init__.py
@@ -465,7 +465,7 @@ src/meta_agent_mcp/
 │       └── metacognitive.py         # Adaptive reflection depth
 │
 └── tools/
-    └── deep_research.py             # MCP tool endpoints for insights
+    └── deep_reflection.py           # MCP tool endpoints for insights
 ```
 
 ### Key Pydantic Models
@@ -488,7 +488,7 @@ class ObservationType(str, Enum):
     ERROR = "error"
 
 class Observation(BaseModel):
-    """An observation captured by the Deep Research Agent."""
+    """An observation captured by the Deep Reflection Agent."""
     id: str = Field(description="Unique observation ID")
     timestamp: datetime = Field(default_factory=datetime.utcnow)
     observation_type: ObservationType
@@ -590,7 +590,7 @@ async def execute_task(task_type: str, task: str, deps: MetaDependencies) -> Age
 
     # Emit observation event (non-blocking)
     asyncio.create_task(
-        deep_research.observe({
+        deep_reflection.observe({
             "type": "task_start",
             "agent": task_type,
             "task": task,
@@ -603,7 +603,7 @@ async def execute_task(task_type: str, task: str, deps: MetaDependencies) -> Age
 
         # Emit completion event
         asyncio.create_task(
-            deep_research.observe({
+            deep_reflection.observe({
                 "type": "task_complete",
                 "agent": task_type,
                 "success": result.success,
@@ -614,7 +614,7 @@ async def execute_task(task_type: str, task: str, deps: MetaDependencies) -> Age
     except Exception as e:
         # Emit error event
         asyncio.create_task(
-            deep_research.observe({
+            deep_reflection.observe({
                 "type": "task_error",
                 "agent": task_type,
                 "error": str(e)
@@ -680,7 +680,7 @@ async def observe(observation: dict) -> None:
         await _observation_queue.put(observation)
     except Exception as e:
         # Log but don't raise - main system must continue
-        logger.warning(f"Deep research observation failed: {e}")
+        logger.warning(f"Deep reflection observation failed: {e}")
 ```
 
 ### 5. Avoid Overthinking
@@ -714,7 +714,7 @@ class MetaCognitiveReflection:
 
 | Metric | Target | Measurement Method |
 |--------|--------|-------------------|
-| Integration overhead | <100ms latency impact | A/B testing with/without Deep Research |
+| Integration overhead | <100ms latency impact | A/B testing with/without Deep Reflection |
 | Pattern recognition accuracy | >85% | Manual validation of detected patterns |
 | Resource usage | <10% of total system resources | System monitoring |
 | Time to actionable insight | <24 hours | From deployment to first recommendation |
@@ -736,9 +736,9 @@ Following Anthropic's approach:
 
 ### Primary Sources
 
-1. **Google Deep Research Documentation**
+1. **Google Reflective AI Documentation**
    - URL: https://ai.google.dev/gemini-api/docs/deep-research
-   - Key insight: Multi-step planning in open domain settings
+   - Key insight: Multi-step planning and reflection in open domain settings
 
 2. **Agent Feedback Loops: From OODA to Self-Reflection**
    - Author: Tao An (Hawaii Pacific University)
@@ -749,9 +749,9 @@ Following Anthropic's approach:
    - URL: https://www.anthropic.com/engineering/multi-agent-research-system
    - Key insight: Production lessons from orchestrator-worker pattern
 
-4. **A Comprehensive Survey of Deep Research (arXiv)**
+4. **A Comprehensive Survey of Reflective AI Systems (arXiv)**
    - URL: https://arxiv.org/html/2506.12594v1
-   - Key insight: Taxonomy of 80+ Deep Research implementations
+   - Key insight: Taxonomy of 80+ reflective AI implementations
 
 5. **Agentic Design Patterns Part 2: Reflection (Andrew Ng)**
    - URL: https://www.deeplearning.ai/the-batch/agentic-design-patterns-part-2-reflection/
@@ -804,32 +804,32 @@ The existing meta-agent MCP system includes:
 ```python
 # In src/meta_agent_mcp/agents/meta.py
 
-from meta_agent_mcp.deep_research import DeepResearchAgent
+from meta_agent_mcp.deep_reflection import DeepReflectionAgent
 
-# Initialize Deep Research Agent
-deep_research = DeepResearchAgent()
+# Initialize Deep Reflection Agent
+deep_reflection = DeepReflectionAgent()
 
 async def run_meta_agent(query: str, ...) -> MetaAgentResult:
     # Start observation
-    await deep_research.observe_query_start(query)
+    await deep_reflection.observe_query_start(query)
 
     # ... existing task planning ...
 
     # Observe task execution
     for level_idx, task_indices in enumerate(execution_levels):
-        await deep_research.observe_level_start(level_idx, task_indices)
+        await deep_reflection.observe_level_start(level_idx, task_indices)
         level_results = await _execute_task_batch(...)
-        await deep_research.observe_level_complete(level_idx, level_results)
+        await deep_reflection.observe_level_complete(level_idx, level_results)
 
     # ... existing synthesis ...
 
     # Complete observation cycle
-    await deep_research.observe_query_complete(query, final_result)
+    await deep_reflection.observe_query_complete(query, final_result)
 
     # Check for recommendations
-    recommendations = await deep_research.get_pending_recommendations()
+    recommendations = await deep_reflection.get_pending_recommendations()
     if recommendations:
-        logger.info(f"Deep Research recommendations: {recommendations}")
+        logger.info(f"Deep Reflection recommendations: {recommendations}")
 
     return final_result
 ```
@@ -838,22 +838,22 @@ async def run_meta_agent(query: str, ...) -> MetaAgentResult:
 
 ## Appendix B: MCP Tool Endpoints
 
-### Proposed Tools for Deep Research
+### Proposed Tools for Deep Reflection
 
 ```python
-# In src/meta_agent_mcp/tools/deep_research.py
+# In src/meta_agent_mcp/tools/deep_reflection.py
 
 from meta_agent_mcp.mcp_instance import mcp
-from meta_agent_mcp.deep_research import deep_research
+from meta_agent_mcp.deep_reflection import deep_reflection
 
 @mcp.tool
 async def get_system_insights() -> dict:
-    """Get current insights and recommendations from Deep Research Agent.
+    """Get current insights and recommendations from Deep Reflection Agent.
 
     Returns analysis of system performance, detected patterns, and
     actionable optimization recommendations.
     """
-    return await deep_research.get_insights()
+    return await deep_reflection.get_insights()
 
 @mcp.tool
 async def get_performance_trends(
@@ -869,7 +869,7 @@ async def get_performance_trends(
     Returns:
         Performance metrics, trends, and anomalies detected.
     """
-    return await deep_research.get_trends(agent_type, time_range_hours)
+    return await deep_reflection.get_trends(agent_type, time_range_hours)
 
 @mcp.tool
 async def get_detected_patterns(
@@ -885,7 +885,7 @@ async def get_detected_patterns(
     Returns:
         List of detected patterns with descriptions and confidence scores.
     """
-    return await deep_research.get_patterns(pattern_type, min_confidence)
+    return await deep_reflection.get_patterns(pattern_type, min_confidence)
 
 @mcp.tool
 async def trigger_ooda_cycle() -> dict:
@@ -897,7 +897,7 @@ async def trigger_ooda_cycle() -> dict:
     Returns:
         Results of the OODA cycle including any new recommendations.
     """
-    return await deep_research.run_ooda_cycle()
+    return await deep_reflection.run_ooda_cycle()
 
 @mcp.tool
 async def get_ooda_state() -> dict:
@@ -907,7 +907,7 @@ async def get_ooda_state() -> dict:
         Current phase, pending observations, detected patterns,
         and cycle statistics.
     """
-    return await deep_research.get_state()
+    return await deep_reflection.get_state()
 
 @mcp.tool
 async def get_learning_history(
@@ -921,7 +921,7 @@ async def get_learning_history(
     Returns:
         Past recommendations, actions taken, and measured outcomes.
     """
-    return await deep_research.get_learning_history(limit)
+    return await deep_reflection.get_learning_history(limit)
 ```
 
 ---
@@ -990,18 +990,18 @@ async def get_learning_history(
 ## Appendix D: Configuration Reference
 
 ```python
-# src/meta_agent_mcp/deep_research/config.py
+# src/meta_agent_mcp/deep_reflection/config.py
 
 from pydantic_settings import BaseSettings
 from pydantic import Field
 
-class DeepResearchSettings(BaseSettings):
-    """Configuration for the Deep Research Agent."""
+class DeepReflectionSettings(BaseSettings):
+    """Configuration for the Deep Reflection Agent."""
 
     # Enable/Disable
     enabled: bool = Field(
         default=True,
-        description="Enable Deep Research Agent"
+        description="Enable Deep Reflection Agent"
     )
 
     # Sampling Configuration
@@ -1040,7 +1040,7 @@ class DeepResearchSettings(BaseSettings):
 
     # Storage Configuration
     sqlite_path: str = Field(
-        default="data/deep_research.db",
+        default="data/deep_reflection.db",
         description="Path to SQLite database"
     )
 
@@ -1065,7 +1065,7 @@ class DeepResearchSettings(BaseSettings):
     )
 
     model_config = {
-        "env_prefix": "DEEP_RESEARCH_",
+        "env_prefix": "DEEP_REFLECTION_",
         "env_file": ".env",
     }
 ```
@@ -1074,4 +1074,4 @@ class DeepResearchSettings(BaseSettings):
 
 *Document Version: 1.0*
 *Last Updated: January 2026*
-*Author: Deep Research Analysis*
+*Author: Deep Reflection Analysis*
