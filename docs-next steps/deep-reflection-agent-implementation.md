@@ -33,7 +33,7 @@ Based on extensive research including reflective AI documentation, Anthropic's m
 - **OODA Loop** for continuous system monitoring and adaptation
 - **Reflexion Framework** for learning across multiple attempts
 - **Hierarchical Reflection** at tactical, strategic, and meta-cognitive levels
-- **Persistent Memory** combining structured storage (SQLite) with vector embeddings (ChromaDB)
+- **Persistent Memory** using Supabase with pgvector for unified structured storage and vector embeddings
 - **Event-Driven Integration** for non-intrusive observation
 
 ---
@@ -249,10 +249,14 @@ Based on strategy analysis (confidence score: 0.85), this approach provides the 
 │  │   Reflection    │  │   Reflection    │  │   Reflection    │         │
 │  └─────────────────┘  └─────────────────┘  └─────────────────┘         │
 │                                                                          │
-│  ┌──────────────────────────┐  ┌──────────────────────────┐            │
-│  │     SQLite Storage       │  │    ChromaDB Vectors      │            │
-│  │    (Structured Data)     │  │     (Embeddings)         │            │
-│  └──────────────────────────┘  └──────────────────────────┘            │
+│  ┌────────────────────────────────────────────────────────────────────┐  │
+│  │                    Supabase (PostgreSQL + pgvector)                 │  │
+│  │  ┌─────────────────────────┐  ┌─────────────────────────┐          │  │
+│  │  │    Structured Tables    │  │    Vector Embeddings    │          │  │
+│  │  │  (Interactions, Metrics,│  │   (Observations, Insights,│         │  │
+│  │  │   Patterns, Decisions)  │  │    Patterns, Recommendations)│     │  │
+│  │  └─────────────────────────┘  └─────────────────────────┘          │  │
+│  └────────────────────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -298,21 +302,26 @@ Based on strategy analysis (confidence score: 0.85), this approach provides the 
 
 ## 8. Memory Architecture
 
-### Recommended: SQLite + ChromaDB/FAISS (Score: 0.75)
+### Recommended: Supabase with pgvector (Score: 0.85)
 
-This combination provides the best balance of proven technology and advanced capabilities:
-- **SQLite**: Reliable structured data storage for interactions and metrics
-- **ChromaDB**: Specialized vector operations for semantic search
+This unified approach provides the best balance of simplicity, proven technology, and advanced capabilities:
+- **Single Database**: All data in one PostgreSQL instance (Supabase) for simplified operations
+- **pgvector Extension**: Native vector operations for semantic search alongside structured data
+- **Real-time Subscriptions**: Built-in real-time capabilities for live observation streaming
+- **Row-Level Security**: Fine-grained access control for multi-tenant deployments
 
-### SQLite Schema
+### Supabase Schema (PostgreSQL + pgvector)
 
 ```sql
--- Agent interactions log
+-- Enable pgvector extension
+CREATE EXTENSION IF NOT EXISTS vector;
+
+-- Agent interactions log with embedding support
 CREATE TABLE agent_interactions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
     session_id TEXT,
-    agent_type TEXT NOT NULL,  -- 'research', 'reasoning', 'strategy', 'meta'
+    agent_type TEXT NOT NULL CHECK (agent_type IN ('research', 'reasoning', 'strategy', 'meta')),
     task TEXT,
     input_hash TEXT,
     output_summary TEXT,
@@ -321,104 +330,205 @@ CREATE TABLE agent_interactions (
     latency_ms INTEGER,
     token_count INTEGER,
     confidence REAL,
-    error_message TEXT
+    error_message TEXT,
+    embedding vector(1536)  -- OpenAI ada-002 dimension, adjust as needed
 );
 
 -- Performance metrics snapshots
 CREATE TABLE performance_metrics (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
     metric_type TEXT NOT NULL,  -- 'latency', 'success_rate', 'token_usage', etc.
     agent_type TEXT,
     value REAL,
-    context JSON,
+    context JSONB,
     window_size_seconds INTEGER
 );
 
--- Detected patterns
+-- Detected patterns with vector similarity support
 CREATE TABLE patterns (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    pattern_type TEXT NOT NULL,  -- 'success', 'failure', 'anomaly', 'trend'
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    pattern_type TEXT NOT NULL CHECK (pattern_type IN ('success', 'failure', 'anomaly', 'trend')),
     description TEXT,
     confidence REAL,
     occurrence_count INTEGER DEFAULT 1,
-    first_seen DATETIME DEFAULT CURRENT_TIMESTAMP,
-    last_seen DATETIME DEFAULT CURRENT_TIMESTAMP,
-    related_agents JSON,
-    metadata JSON
+    first_seen TIMESTAMPTZ DEFAULT NOW(),
+    last_seen TIMESTAMPTZ DEFAULT NOW(),
+    related_agents JSONB,
+    metadata JSONB,
+    embedding vector(1536)  -- For pattern similarity matching
 );
 
 -- Decision and recommendation log
 CREATE TABLE decisions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-    trigger_pattern_id INTEGER REFERENCES patterns(id),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    trigger_pattern_id UUID REFERENCES patterns(id),
     recommendation TEXT,
     rationale TEXT,
-    priority TEXT,  -- 'critical', 'high', 'medium', 'low'
+    priority TEXT CHECK (priority IN ('critical', 'high', 'medium', 'low')),
     action_taken TEXT,
     outcome TEXT,
     impact_score REAL,
-    feedback JSON
+    feedback JSONB,
+    embedding vector(1536)  -- For recommendation similarity search
 );
 
 -- Configuration history for tracking changes
 CREATE TABLE configuration_history (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
     config_key TEXT NOT NULL,
     old_value TEXT,
     new_value TEXT,
     change_reason TEXT,
-    triggered_by_decision_id INTEGER REFERENCES decisions(id)
+    triggered_by_decision_id UUID REFERENCES decisions(id)
+);
+
+-- Insights table with embeddings for semantic search
+CREATE TABLE insights (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    insight_type TEXT NOT NULL,
+    content TEXT NOT NULL,
+    confidence REAL,
+    source_interactions UUID[],  -- Array of related interaction IDs
+    embedding vector(1536)
 );
 
 -- Indexes for common queries
-CREATE INDEX idx_interactions_timestamp ON agent_interactions(timestamp);
+CREATE INDEX idx_interactions_created_at ON agent_interactions(created_at);
 CREATE INDEX idx_interactions_agent ON agent_interactions(agent_type);
-CREATE INDEX idx_metrics_type ON performance_metrics(metric_type, timestamp);
+CREATE INDEX idx_metrics_type ON performance_metrics(metric_type, created_at);
 CREATE INDEX idx_patterns_type ON patterns(pattern_type);
+
+-- Vector similarity indexes using HNSW (faster than IVFFlat for smaller datasets)
+CREATE INDEX idx_interactions_embedding ON agent_interactions
+    USING hnsw (embedding vector_cosine_ops);
+CREATE INDEX idx_patterns_embedding ON patterns
+    USING hnsw (embedding vector_cosine_ops);
+CREATE INDEX idx_decisions_embedding ON decisions
+    USING hnsw (embedding vector_cosine_ops);
+CREATE INDEX idx_insights_embedding ON insights
+    USING hnsw (embedding vector_cosine_ops);
+
+-- Helper function for semantic search
+CREATE OR REPLACE FUNCTION match_observations(
+    query_embedding vector(1536),
+    match_threshold REAL DEFAULT 0.7,
+    match_count INT DEFAULT 10
+)
+RETURNS TABLE (
+    id UUID,
+    agent_type TEXT,
+    task TEXT,
+    output_summary TEXT,
+    similarity REAL
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        ai.id,
+        ai.agent_type,
+        ai.task,
+        ai.output_summary,
+        1 - (ai.embedding <=> query_embedding) AS similarity
+    FROM agent_interactions ai
+    WHERE 1 - (ai.embedding <=> query_embedding) > match_threshold
+    ORDER BY ai.embedding <=> query_embedding
+    LIMIT match_count;
+END;
+$$;
 ```
 
-### ChromaDB Collections
+### Supabase Client Integration
 
 ```python
-# Collection definitions for vector storage
+# Supabase client configuration for Deep Reflection Agent
 
-collections = {
-    "observation_embeddings": {
-        "description": "Semantic embeddings of agent observations",
-        "metadata_schema": {
-            "timestamp": "datetime",
-            "agent_type": "string",
-            "observation_type": "string"
+from supabase import create_client, Client
+from typing import List, Dict, Any
+import os
+
+class SupabaseMemoryStore:
+    """Unified memory store using Supabase with pgvector."""
+
+    def __init__(self):
+        url = os.environ.get("SUPABASE_URL")
+        key = os.environ.get("SUPABASE_SERVICE_KEY")
+        self.client: Client = create_client(url, key)
+
+    async def store_interaction(
+        self,
+        agent_type: str,
+        task: str,
+        output_summary: str,
+        embedding: List[float],
+        **kwargs
+    ) -> str:
+        """Store an agent interaction with its embedding."""
+        data = {
+            "agent_type": agent_type,
+            "task": task,
+            "output_summary": output_summary,
+            "embedding": embedding,
+            **kwargs
         }
-    },
-    "insight_embeddings": {
-        "description": "Learned insights for similarity search",
-        "metadata_schema": {
-            "insight_type": "string",
-            "confidence": "float",
-            "created_at": "datetime"
+        result = self.client.table("agent_interactions").insert(data).execute()
+        return result.data[0]["id"]
+
+    async def search_similar_interactions(
+        self,
+        query_embedding: List[float],
+        threshold: float = 0.7,
+        limit: int = 10
+    ) -> List[Dict[str, Any]]:
+        """Search for semantically similar past interactions."""
+        result = self.client.rpc(
+            "match_observations",
+            {
+                "query_embedding": query_embedding,
+                "match_threshold": threshold,
+                "match_count": limit
+            }
+        ).execute()
+        return result.data
+
+    async def store_pattern(
+        self,
+        pattern_type: str,
+        description: str,
+        confidence: float,
+        embedding: List[float],
+        **kwargs
+    ) -> str:
+        """Store a detected pattern with its embedding."""
+        data = {
+            "pattern_type": pattern_type,
+            "description": description,
+            "confidence": confidence,
+            "embedding": embedding,
+            **kwargs
         }
-    },
-    "pattern_embeddings": {
-        "description": "Behavioral patterns for matching",
-        "metadata_schema": {
-            "pattern_type": "string",
-            "occurrence_count": "int",
-            "last_seen": "datetime"
-        }
-    },
-    "recommendation_embeddings": {
-        "description": "Past recommendations for context retrieval",
-        "metadata_schema": {
-            "priority": "string",
-            "outcome": "string",
-            "impact_score": "float"
-        }
-    }
-}
+        result = self.client.table("patterns").insert(data).execute()
+        return result.data[0]["id"]
+
+    async def get_recent_metrics(
+        self,
+        metric_type: str = None,
+        hours: int = 24
+    ) -> List[Dict[str, Any]]:
+        """Get recent performance metrics."""
+        query = self.client.table("performance_metrics")\
+            .select("*")\
+            .gte("created_at", f"now() - interval '{hours} hours'")
+
+        if metric_type:
+            query = query.eq("metric_type", metric_type)
+
+        return query.execute().data
 ```
 
 ---
@@ -454,9 +564,8 @@ src/meta_agent_mcp/
 │   │
 │   ├── memory/
 │   │   ├── __init__.py
-│   │   ├── sqlite_store.py          # SQLite storage implementation
-│   │   ├── vector_store.py          # ChromaDB/FAISS implementation
-│   │   └── memory_manager.py        # Unified memory interface
+│   │   ├── supabase_store.py        # Supabase + pgvector unified storage
+│   │   └── memory_manager.py        # Memory interface abstraction
 │   │
 │   └── reflection/
 │       ├── __init__.py
@@ -539,8 +648,8 @@ class OODAState(BaseModel):
 | Task | Description | Priority |
 |------|-------------|----------|
 | Create Pydantic models | Define all data structures in `models.py` | High |
-| Implement SQLite schema | Set up database with migrations | High |
-| Set up ChromaDB | Initialize vector collections | High |
+| Set up Supabase project | Create tables, enable pgvector extension | High |
+| Implement Supabase client | Unified storage with vector support | High |
 | Build event hooks | Add observation points to existing agents | High |
 | Create base observer interface | Abstract base class for observers | Medium |
 
@@ -1038,15 +1147,27 @@ class DeepReflectionSettings(BaseSettings):
         description="Max patterns to keep in memory"
     )
 
-    # Storage Configuration
-    sqlite_path: str = Field(
-        default="data/deep_reflection.db",
-        description="Path to SQLite database"
+    # Supabase Storage Configuration
+    supabase_url: str = Field(
+        default="",
+        description="Supabase project URL"
     )
 
-    chromadb_path: str = Field(
-        default="data/chromadb",
-        description="Path to ChromaDB storage"
+    supabase_service_key: str = Field(
+        default="",
+        description="Supabase service role key (for server-side access)"
+    )
+
+    embedding_dimension: int = Field(
+        default=1536,
+        description="Vector embedding dimension (1536 for OpenAI ada-002)"
+    )
+
+    similarity_threshold: float = Field(
+        default=0.7,
+        ge=0.0,
+        le=1.0,
+        description="Minimum similarity threshold for vector search"
     )
 
     # Reflection Configuration
@@ -1072,6 +1193,7 @@ class DeepReflectionSettings(BaseSettings):
 
 ---
 
-*Document Version: 1.0*
+*Document Version: 1.1*
 *Last Updated: January 2026*
 *Author: Deep Reflection Analysis*
+*Changes: Updated to use Supabase with pgvector for unified storage (replacing SQLite + ChromaDB)*
