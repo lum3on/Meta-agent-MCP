@@ -1,0 +1,65 @@
+# Docker Compose for Meta Agent MCP Server
+# Supports running multiple instances on different ports
+
+services:
+  # Primary MCP server instance
+  meta-agent-mcp-1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: meta-agent-mcp-1
+    ports:
+      - "8080:8080"
+    environment:
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - META_AGENT_MODEL=${META_AGENT_MODEL:-x-ai/grok-4.1-fast}
+      - REASONING_MODEL=${REASONING_MODEL:-anthropic/claude-3-haiku}
+      - STRATEGY_MODEL=${STRATEGY_MODEL:-anthropic/claude-3.5-sonnet}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - TRANSPORT=streamable-http
+      - TRANSPORT_HOST=0.0.0.0
+      - TRANSPORT_PORT=8080
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Secondary MCP server instance (optional - for load balancing or different configs)
+  meta-agent-mcp-2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: meta-agent-mcp-2
+    ports:
+      - "8081:8080"
+    environment:
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - META_AGENT_MODEL=${META_AGENT_MODEL:-x-ai/grok-4.1-fast}
+      - REASONING_MODEL=${REASONING_MODEL:-anthropic/claude-3-haiku}
+      - STRATEGY_MODEL=${STRATEGY_MODEL:-anthropic/claude-3.5-sonnet}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - TRANSPORT=streamable-http
+      - TRANSPORT_HOST=0.0.0.0
+      - TRANSPORT_PORT=8080
+    restart: unless-stopped
+    profiles:
+      - multi  # Only starts with: docker-compose --profile multi up
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+# To run both instances:
+#   docker-compose --profile multi up -d
+#
+# To run only the primary instance:
+#   docker-compose up -d
+#
+# To scale dynamically:
+#   docker-compose up -d --scale meta-agent-mcp-1=3
+
